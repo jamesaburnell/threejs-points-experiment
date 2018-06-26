@@ -50,10 +50,12 @@
 				vColor = customColor;
 				vec4 pos = vec4( position, 1.0 );
 
-				pos.x = pos.x + sin( (( pos.x + (u_time / float(4)) ) * float(5)) * float(4) );
+				pos.z = pos.x + sin( (( pos.x + (u_time / float(4)) ) * float(5)) * float(4) );
 
 				vec4 mvPosition = modelViewMatrix * pos;
+
 				gl_PointSize = size * ( 300.0 / -mvPosition.z );
+
 				gl_Position = projectionMatrix * mvPosition;
 
 			}
@@ -117,7 +119,7 @@
 
 				//
 
-				var geometry1 = new THREE.SphereGeometry(100, 512, 512) //new THREE.BoxGeometry( 100, 100, 100, 64, 64, 64 ); 
+				var geometry1 = new THREE.PlaneGeometry(200, 200, 128, 128) //new THREE.BoxGeometry( 100, 100, 100, 64, 64, 64 ); //   new THREE.SphereGeometry(100, 512, 512)
 				var vertices = geometry1.vertices;
 
 				var positions = new Float32Array( vertices.length * 3 );
