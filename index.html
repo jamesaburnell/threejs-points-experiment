@@ -146,16 +146,13 @@
 				vNoise = cnoise(normalize(position) * u_scale);
 
 				vec3 pos = position;
-
 				pos.x = pos.x + sin( (( pos.x + (u_time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
 				pos.y = pos.y + sin( (( pos.y + (u_time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
 
 				vec4 posFinal = vec4(pos * vNoise * vec3(u_displacement), 1.0);
-
 				vec4 mvPosition = modelViewMatrix * posFinal;
 
 				gl_PointSize = size * ( 300.0 / -mvPosition.z );
-
 				gl_Position = projectionMatrix * mvPosition;
 
 			}
@@ -174,7 +171,6 @@
 			void main() {
 
 				gl_FragColor = vec4( color * vColor * abs(vNoise * 2.0), 1.0 );
-
 				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 
 				if ( gl_FragColor.a < ALPHATEST ) discard;
@@ -192,7 +188,7 @@
 
 			let particles, uniforms, material, clock
 
-			let PARTICLE_SIZE = 80
+			let PARTICLE_SIZE = 20
 
 			let deltaOffset = 1
 
@@ -225,7 +221,7 @@
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.z = 200;
 
-				scene.background = new THREE.Color( /*0xa0a0a0*/ 0xd1d1d1 );
+				scene.background = new THREE.Color( 0xd1d1d1 );
 				scene.fog = new THREE.Fog( 0xa0a0a0, 10, 100 );
 
 				// points
