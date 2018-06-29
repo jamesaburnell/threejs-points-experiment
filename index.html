@@ -159,7 +159,7 @@
 
 				vec3 pos = position;
 				pos.x = pos.x + sin(pos.x + time);
-				pos.y = pos.y + sin( (( pos.y + (time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
+				pos.y = pos.y + sin((( pos.y + (time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
 
 				pos = bounce(pos, time);
 
@@ -174,7 +174,7 @@
 
 		</script>
 
-		<!-- <script type="x-shader/x-fragment" id="fragmentshader">
+		<script type="x-shader/x-fragment" id="fragmentshader">
 
 			uniform vec3 color;
 			uniform sampler2D texture;
@@ -192,7 +192,7 @@
 
 			}
 
-		</script> -->
+		</script>
 
 
 		<script>
@@ -205,7 +205,7 @@
 
 			let PARTICLE_SIZE = 20
 
-			let boxGroup, numRows = 6, numColumns = 6, numLayers = 6
+			let boxGroup, numRows = 6, numColumns = 6, numLayers = 6, boxMargin = 40
 
 			let deltaOffset = 1
 
@@ -225,7 +225,7 @@
 				speed: 20,
 				displacement: 1,
 				scale: 1.5,
-				size: 1.3,
+				size: 2.3,
 				bounce: 5
 			}
 			
@@ -242,11 +242,11 @@
 				scene = new THREE.Scene();
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.z = 500
+				camera.position.z = 400
 				camera.position.y = 20
 				camera.position.x = 60
 
-				scene.background = new THREE.Color( 0xffffff );
+				scene.background = new THREE.Color( 0x000000 );
 
 				// points
 				var geometry1 = new THREE.BoxGeometry( 10, 10, 10, 16, 16, 16 );// new THREE.SphereGeometry(80, 256, 256) //new THREE.PlaneGeometry(200, 200, 128, 128) //  //
@@ -312,9 +312,9 @@
 							})
 
 							particles = new THREE.Points( geometry, materials[boxCount] )
-							particles.position.y = i * 30
-							particles.position.x = h * 30
-							particles.position.z = l * 30
+							particles.position.y = i * boxMargin
+							particles.position.x = h * boxMargin
+							particles.position.z = l * boxMargin
 							
 							boxes.push(particles)
 							boxGroup.add(particles)
@@ -430,15 +430,8 @@
 
 				delta = clock.getElapsedTime()
 				materials.forEach((e, i) => {
-					e.uniforms.u_time.value = ((delta / deltaOffset) + (delta * (i/* % 40*/))) / 20
+					e.uniforms.u_time.value = ((delta / deltaOffset) + (delta * (i % 40))) / 20
 				})
-
-				// boxes.forEach((box, i) => {
-				// 	if( i % 5 === 0) {	
-				// 		box.rotation.x += delta / (i/* % 40*/);
-				// 		box.rotation.y += delta / (i/* % 40*/);
-				// 	}
-				// })
 
 				raycaster.setFromCamera( mouse, camera );
 
