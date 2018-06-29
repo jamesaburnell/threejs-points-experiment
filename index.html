@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - interactive particles</title>
+		<title>particles</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -47,6 +47,7 @@
 			uniform float u_speed;
 			uniform float u_displacement;
 			uniform float u_scale;
+			uniform float u_particleSize;
 
 			varying vec3 vColor;
 
@@ -152,7 +153,7 @@
 				vec4 posFinal = vec4(pos * vNoise * vec3(u_displacement), 1.0);
 				vec4 mvPosition = modelViewMatrix * posFinal;
 
-				gl_PointSize = size * ( 300.0 / -mvPosition.z );
+				gl_PointSize = size * u_particleSize * ( 300.0 / -mvPosition.z );
 				gl_Position = projectionMatrix * mvPosition;
 
 			}
@@ -204,8 +205,9 @@
 			let particlesController = {
 				frequency: 1.22,
 				speed: 3.21,
-				displacement: 0.5,
-				scale: 1.5
+				displacement: 2.1,
+				scale: 1.5,
+				size: 1
 			}
 
 			init()
@@ -222,10 +224,9 @@
 				camera.position.z = 200;
 
 				scene.background = new THREE.Color( 0xd1d1d1 );
-				scene.fog = new THREE.Fog( 0xa0a0a0, 10, 100 );
 
 				// points
-				var geometry1 = new THREE.BoxGeometry( 100, 100, 100, 64, 64, 64 );// new THREE.SphereGeometry(80, 256, 256) //new THREE.PlaneGeometry(200, 200, 128, 128) //  //
+				var geometry1 = new THREE.BoxGeometry( 100, 100, 100, 256, 256, 256 );// new THREE.SphereGeometry(80, 256, 256) //new THREE.PlaneGeometry(200, 200, 128, 128) //  //
 				var vertices = geometry1.vertices;
 
 				var positions = new Float32Array( vertices.length * 3 );
@@ -270,7 +271,8 @@
 						u_frequency: { value: particlesController.frequency },
 						u_speed: { value: particlesController.speed },
 						u_displacement: { value: particlesController.displacement},
-						u_scale: { value: particlesController.scale }
+						u_scale: { value: particlesController.scale },
+						u_particleSize: { value: particlesController.size }
 					},
 					vertexShader: document.getElementById( 'vertexshader' ).textContent,
 					fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
@@ -324,6 +326,8 @@
 				material.uniforms.u_speed.value = particlesController.speed
 				material.uniforms.u_displacement.value = particlesController.displacement
 				material.uniforms.u_scale.value = particlesController.scale
+				material.uniforms.u_particleSize.value = particlesController.size
+				console.log(particlesController.size)
 			}
 
 
@@ -341,7 +345,8 @@
 				particlesFolder.add( particlesController, "frequency", 0, 15, 0.0005).onChange( particlesValuesChanger );
 				particlesFolder.add( particlesController, "speed", 0, 15, 0.0005).onChange( particlesValuesChanger );
 				particlesFolder.add( particlesController, "displacement", 0, 6, 0.0005).onChange( particlesValuesChanger );
-				particlesFolder.add( particlesController, "scale", 0, 6, 0.0005).onChange( particlesValuesChanger );
+				particlesFolder.add( particlesController, "scale", 0, 10, 0.0005).onChange( particlesValuesChanger );
+				particlesFolder.add( particlesController, "size", 0, 10, 0.001).onChange( particlesValuesChanger );
 
 			}
 
@@ -373,8 +378,8 @@
 
 			function render() {
 
-				// particles.rotation.x += 0.002;
-				// particles.rotation.y += 0.005;
+				particles.rotation.x += 0.002;
+				particles.rotation.y += 0.005;
 
 				var geometry = particles.geometry;
 				var attributes = geometry.attributes;
