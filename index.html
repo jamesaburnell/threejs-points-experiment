@@ -50,6 +50,7 @@
 			uniform float u_particleSize;
 
 			varying vec3 vColor;
+			varying float vTime;
 
 			varying float vNoise;
 
@@ -146,11 +147,14 @@
 				vColor = customColor;
 				vNoise = cnoise(normalize(position) * u_scale);
 
-				vec3 pos = position;
-				pos.x = pos.x + sin( (( pos.x + (u_time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
-				pos.y = pos.y + sin( (( pos.y + (u_time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
+				float time = u_time / u_speed;
+				vTime = time;
 
-				vec4 posFinal = vec4(pos * vNoise * vec3(u_displacement), 1.0);
+				vec3 pos = position;
+				pos.x = pos.x + sin(pos.x + time);
+				//pos.y = pos.y + sin( (( pos.y + (time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
+
+				vec4 posFinal = vec4(pos * vec3(u_displacement), 1.0);
 				vec4 mvPosition = modelViewMatrix * posFinal;
 
 				gl_PointSize = size * u_particleSize * ( 300.0 / -mvPosition.z );
@@ -168,10 +172,11 @@
 
 			varying vec3 vColor;
 			varying float vNoise;
+			varying float vTime;
 
 			void main() {
 
-				gl_FragColor = vec4( color * vColor * abs(vNoise * 2.0), 1.0 );
+				gl_FragColor = vec4( color * vColor * abs(tan(vTime + color)), 1.0 );
 				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 
 				if ( gl_FragColor.a < ALPHATEST ) discard;
@@ -187,27 +192,31 @@
 
 			let renderer, scene, camera, stats
 
-			let particles, uniforms, material, clock
+			let particles, uniforms, clock, materials = [], materialTEST
 
 			let PARTICLE_SIZE = 20
 
+			let boxGroup, numRows = 6, numColumns = 6, numLayers = 6
+
 			let deltaOffset = 1
+
+
 
 			// let raycaster, intersects;
 			let mouse, INTERSECTED;
 			
 			let effectController = {
-				x: 2.343,
-				y: 2.276,
-				z: 2.078
+				x: 0.4,
+				y: 0.8,
+				z: 1.61
 			}
 
 			let particlesController = {
 				frequency: 1.22,
 				speed: 3.21,
-				displacement: 2.1,
+				displacement: 1,
 				scale: 1.5,
-				size: 1
+				size: 1.3
 			}
 
 			init()
@@ -221,12 +230,14 @@
 				scene = new THREE.Scene();
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.z = 200;
+				camera.position.z = 400
+				camera.position.y = 20
+				camera.position.x = 60
 
-				scene.background = new THREE.Color( 0xd1d1d1 );
+				scene.background = new THREE.Color( 0xffffff );
 
 				// points
-				var geometry1 = new THREE.BoxGeometry( 100, 100, 100, 256, 256, 256 );// new THREE.SphereGeometry(80, 256, 256) //new THREE.PlaneGeometry(200, 200, 128, 128) //  //
+				var geometry1 = new THREE.BoxGeometry( 10, 10, 10, 8, 8, 8 );// new THREE.SphereGeometry(80, 256, 256) //new THREE.PlaneGeometry(200, 200, 128, 128) //  //
 				var vertices = geometry1.vertices;
 
 				var positions = new Float32Array( vertices.length * 3 );
@@ -261,33 +272,52 @@
 
 				//
 
-				material = new THREE.ShaderMaterial( {
+				boxGroup = new THREE.Group()
 
-					uniforms: {
-						color:   { value: new THREE.Color( 0xffffff ) },
-						texture: { value: new THREE.TextureLoader().load( "textures/sprites/disc.png" ) },
-						u_time:  { value: (clock.getDelta() / deltaOffset) },
-						screenWidth: { value: window.innerWidth },
-						u_frequency: { value: particlesController.frequency },
-						u_speed: { value: particlesController.speed },
-						u_displacement: { value: particlesController.displacement},
-						u_scale: { value: particlesController.scale },
-						u_particleSize: { value: particlesController.size }
-					},
-					vertexShader: document.getElementById( 'vertexshader' ).textContent,
-					fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+				let boxCount = 2
+				
+				
+				for(let l = 0; l < numLayers; l++) {
+					for(let i = 0; i < numRows; i++) {
+						for(let h = 0; h < numColumns; h++) {
 
-					alphaTest: 0.9
+							materials[boxCount] = new THREE.ShaderMaterial({
+								uniforms: {
+									color:   { value: new THREE.Color( 0x551A8B ) },
+									texture: { value: new THREE.TextureLoader().load( "textures/sprites/disc.png" ) },
+									u_time:  { value: (clock.getDelta() / deltaOffset) * boxCount},
+									screenWidth: { value: window.innerWidth },
+									u_frequency: { value: particlesController.frequency },
+									u_speed: { value: particlesController.speed },
+									u_displacement: { value: particlesController.displacement},
+									u_scale: { value: particlesController.scale },
+									u_particleSize: { value: particlesController.size }
+								},
+								vertexShader: document.getElementById( 'vertexshader' ).textContent,
+								fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+								alphaTest: 0.9
+							})
 
-				} );
+							particles = new THREE.Points( geometry, materials[boxCount] )
+							particles.position.y = i * 30
+							particles.position.x = h * 30
+							particles.position.z = l * 30
+							boxGroup.add(particles)
+							boxCount++
 
-				//
+						}
+					}
+				}
 
-				particles = new THREE.Points( geometry, material );
-				scene.add( particles );
-				particles.rotation.x = 2.343;
-				particles.rotation.y = 2.277;
-				particles.rotation.z = 2.078;
+				console.log(boxCount)
+				
+
+				boxGroup.rotation.x = effectController.x
+				boxGroup.rotation.y = effectController.y
+				boxGroup.rotation.z = effectController.z
+
+				scene.add( boxGroup );
+				
 
 				
 
@@ -316,18 +346,19 @@
 			}
 
 			function cameraValuesChanger() {
-				particles.rotation.x = effectController.x;
-				particles.rotation.y = effectController.y;
-				particles.rotation.z = effectController.z;
+				boxGroup.rotation.x = effectController.x;
+				boxGroup.rotation.y = effectController.y;
+				boxGroup.rotation.z = effectController.z;
 			}
 
 			function particlesValuesChanger() {
-				material.uniforms.u_frequency.value = particlesController.frequency
-				material.uniforms.u_speed.value = particlesController.speed
-				material.uniforms.u_displacement.value = particlesController.displacement
-				material.uniforms.u_scale.value = particlesController.scale
-				material.uniforms.u_particleSize.value = particlesController.size
-				console.log(particlesController.size)
+				materials.forEach(e => {
+					e.uniforms.u_frequency.value = particlesController.frequency
+					e.uniforms.u_speed.value = particlesController.speed
+					e.uniforms.u_displacement.value = particlesController.displacement
+					e.uniforms.u_scale.value = particlesController.scale
+					e.uniforms.u_particleSize.value = particlesController.size
+				})
 			}
 
 
@@ -378,13 +409,16 @@
 
 			function render() {
 
-				particles.rotation.x += 0.002;
-				particles.rotation.y += 0.005;
+				// particles.rotation.x += 0.002;
+				// particles.rotation.y += 0.005;
 
 				var geometry = particles.geometry;
 				var attributes = geometry.attributes;
 
-				material.uniforms.u_time.value = (clock.getElapsedTime() / deltaOffset)
+				delta = clock.getElapsedTime()
+				materials.forEach((e, i) => {
+					e.uniforms.u_time.value = ((delta / deltaOffset) + (delta * i)) / 20
+				})
 
 				raycaster.setFromCamera( mouse, camera );
 
