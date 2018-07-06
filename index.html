@@ -150,7 +150,7 @@
 				pos.x = pos.x + sin( (( pos.x + (u_time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
 				pos.y = pos.y + sin( (( pos.y + (u_time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
 
-				vec4 posFinal = vec4(pos * vNoise * vec3(u_displacement), 1.0);
+				vec4 posFinal = vec4(pos - vNoise * vec3(u_displacement), 1.0);
 				vec4 mvPosition = modelViewMatrix * posFinal;
 
 				gl_PointSize = size * u_particleSize * ( 300.0 / -mvPosition.z );
@@ -172,7 +172,7 @@
 
 			void main() {
 
-				gl_FragColor = vec4( color * vColor * abs(tan(vNoise + u_time)), 1.0 );
+				gl_FragColor = vec4( color - vColor * abs(tan(vNoise + u_time)), 1.0 );
 				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 
 				if ( gl_FragColor.a < ALPHATEST ) discard;
