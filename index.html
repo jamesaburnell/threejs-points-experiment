@@ -79,12 +79,12 @@
 				vTime = time;
 
 				vec3 pos = position;
-				pos.x = pos.x + sin(pos.x + time);
+				pos.x = pos.x + sin(pos.x + (time/10.0)) * noise;
 				pos.y = pos.y + sin((( pos.y + (time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
 
 				pos = bounce(pos, time);
 
-				vec4 posFinal = vec4(pos * vec3(u_displacement) * noise, 1.0);
+				vec4 posFinal = vec4(pos * vec3(u_displacement), 1.0);
 				vec4 mvPosition = modelViewMatrix * posFinal;
 
 				gl_PointSize = size * u_particleSize * (300.0 / -mvPosition.z);
@@ -106,7 +106,7 @@
 
 			void main() {
 
-				gl_FragColor = vec4( color * vColor * abs(tan(vTime - vColor)), 1.0 );
+				gl_FragColor = vec4(color, 1.0); //vec4( color * vColor * abs(tan(vTime - vColor)) , 1.0 );
 				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 
 				if ( gl_FragColor.a < ALPHATEST ) discard;
@@ -356,7 +356,7 @@
 				
 				materials.forEach((e, i) => {
 					e.uniforms.u_time.value = ((delta / deltaOffset) + (delta * (i % 40))) / 20
-					// e.uniforms.noise.value = noise.perlin3(boxes[i].position.x, boxes[i].position.y, delta);
+					e.uniforms.noise.value = noise.perlin3(boxes[i].position.x, boxes[i].position.y, delta);
 				})
 
 				raycaster.setFromCamera( mouse, camera );
