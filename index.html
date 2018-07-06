@@ -31,7 +31,7 @@
 		<div id="container"></div>
 
 		<script src="three.js"></script>
-
+		<script src="perlin.js"></script>
 		<script src="js/Detector.js"></script>
 		<script src="js/libs/stats.min.js"></script>
 		<script src="js/libs/dat.gui.min.js"></script>
@@ -49,6 +49,7 @@
 			uniform float u_scale;
 			uniform float u_particleSize;
 			uniform float u_bounce;
+			uniform float noise;
 
 			varying vec3 vColor;
 			varying float vTime;
@@ -63,85 +64,6 @@
 			float sind(float a){return sin(a * PI180);}
 			float cosd(float a){return cos(a * PI180);}
 			
-			vec3 mod289(vec3 x) {
-				return x - floor(x * (1.0 / 289.0)) * 289.0;
-			}
-			  
-			vec4 mod289(vec4 x) {
-				return x - floor(x * (1.0 / 289.0)) * 289.0;
-			}
-			vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
-			vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
-			vec3 fade(vec3 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
-
-			float cnoise(vec3 P) {
-				vec3 Pi0 = floor(P);
-				vec3 Pi1 = Pi0 + vec3(1.0);
-				Pi0 = mod289(Pi0);
-				Pi1 = mod289(Pi1);
-				vec3 Pf0 = fract(P);
-				vec3 Pf1 = Pf0 - vec3(1.0);
-				vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
-				vec4 iy = vec4(Pi0.yy, Pi1.yy);
-				vec4 iz0 = Pi0.zzzz;
-				vec4 iz1 = Pi1.zzzz;
-			  
-				vec4 ixy = permute(permute(ix) + iy);
-				vec4 ixy0 = permute(ixy + iz0);
-				vec4 ixy1 = permute(ixy + iz1);
-			  
-				vec4 gx0 = ixy0 * (1.0 / 7.0);
-				vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;
-				gx0 = fract(gx0);
-				vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);
-				vec4 sz0 = step(gz0, vec4(0.0));
-				gx0 -= sz0 * (step(0.0, gx0) - 0.5);
-				gy0 -= sz0 * (step(0.0, gy0) - 0.5);
-			  
-				vec4 gx1 = ixy1 * (1.0 / 7.0);
-				vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;
-				gx1 = fract(gx1);
-				vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);
-				vec4 sz1 = step(gz1, vec4(0.0));
-				gx1 -= sz1 * (step(0.0, gx1) - 0.5);
-				gy1 -= sz1 * (step(0.0, gy1) - 0.5);
-			  
-				vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);
-				vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);
-				vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);
-				vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);
-				vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);
-				vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);
-				vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);
-				vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);
-			  
-				vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));
-				g000 *= norm0.x;
-				g010 *= norm0.y;
-				g100 *= norm0.z;
-				g110 *= norm0.w;
-				vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));
-				g001 *= norm1.x;
-				g011 *= norm1.y;
-				g101 *= norm1.z;
-				g111 *= norm1.w;
-			  
-				float n000 = dot(g000, Pf0);
-				float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));
-				float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));
-				float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));
-				float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));
-				float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));
-				float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));
-				float n111 = dot(g111, Pf1);
-			  
-				vec3 fade_xyz = fade(Pf0);
-				vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);
-				vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);
-				float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);
-				return 2.2 * n_xyz;
-			}
-
 
 			vec3 bounce(vec3 p, float t) {
 				p.x = p.x + sin(t * u_bounce);
@@ -152,7 +74,6 @@
 			void main() {
 
 				vColor = customColor;
-				vNoise = cnoise(normalize(position) * u_scale);
 
 				float time = u_time / u_speed;
 				vTime = time;
@@ -163,10 +84,10 @@
 
 				pos = bounce(pos, time);
 
-				vec4 posFinal = vec4(pos * vec3(u_displacement), 1.0);
+				vec4 posFinal = vec4(pos * vec3(u_displacement) * noise, 1.0);
 				vec4 mvPosition = modelViewMatrix * posFinal;
 
-				gl_PointSize = size * u_particleSize * ( 300.0 / -mvPosition.z );
+				gl_PointSize = size * u_particleSize * (300.0 / -mvPosition.z);
 				gl_Position = projectionMatrix * mvPosition;
 
 			}
@@ -177,15 +98,15 @@
 		<script type="x-shader/x-fragment" id="fragmentshader">
 
 			uniform vec3 color;
+			uniform float noise;
 			uniform sampler2D texture;
 
 			varying vec3 vColor;
-			varying float vNoise;
 			varying float vTime;
 
 			void main() {
 
-				gl_FragColor = vec4( color * vColor * abs(tan(vTime + color)), 1.0 );
+				gl_FragColor = vec4( color * vColor * abs(tan(vTime - vColor)), 1.0 );
 				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 
 				if ( gl_FragColor.a < ALPHATEST ) discard;
@@ -203,7 +124,7 @@
 
 			let particles, uniforms, clock, materials = [], boxes = [], materialTEST
 
-			let PARTICLE_SIZE = 20
+			let PARTICLE_SIZE = 10
 
 			let boxGroup, numRows = 6, numColumns = 6, numLayers = 6, boxMargin = 40
 
@@ -222,18 +143,18 @@
 
 			let particlesController = {
 				frequency: 0.2,
-				speed: 20,
-				displacement: 1,
+				speed: 2,
+				displacement: 1.41,
 				scale: 1.5,
-				size: 2.3,
-				bounce: 5
+				size: 0.7,
+				bounce: 2
 			}
-			
-
 
 			init()
 			animate()
 			initGui()
+
+
 
 			function init() {
 
@@ -242,14 +163,14 @@
 				scene = new THREE.Scene();
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.z = 400
+				camera.position.z = 500
 				camera.position.y = 20
 				camera.position.x = 60
 
 				scene.background = new THREE.Color( 0x000000 );
 
 				// points
-				var geometry1 = new THREE.BoxGeometry( 10, 10, 10, 16, 16, 16 );// new THREE.SphereGeometry(80, 256, 256) //new THREE.PlaneGeometry(200, 200, 128, 128) //  //
+				var geometry1 = new THREE.BoxGeometry( 10, 10, 10, 32, 32, 32 ); // new THREE.SphereGeometry(80, 256, 256) // new THREE.PlaneGeometry(200, 200, 128, 128) //
 				var vertices = geometry1.vertices;
 
 				var positions = new Float32Array( vertices.length * 3 );
@@ -286,7 +207,8 @@
 
 				boxGroup = new THREE.Group()
 
-				let boxCount = 2, texture1 = new THREE.TextureLoader().load( "textures/sprites/disc.png" )
+				let boxCount = 0, texture1 = new THREE.TextureLoader().load( "textures/sprites/disc.png" )
+
 				
 				
 				for(let l = 0; l < numLayers; l++) {
@@ -295,16 +217,17 @@
 
 							materials[boxCount] = new THREE.ShaderMaterial({
 								uniforms: {
-									color:   { value: new THREE.Color( 0x551A8B ) },
-									texture: { value: texture1 },
-									u_time:  { value: (clock.getDelta() / deltaOffset) * boxCount},
-									screenWidth: { value: window.innerWidth },
-									u_frequency: { value: particlesController.frequency },
-									u_speed: { value: particlesController.speed },
+									color:  		{ value: new THREE.Color( 0x551A8B ) },
+									texture: 		{ value: texture1 },
+									noise:   		{ value: 1.0 },
+									u_time:  		{ value: (clock.getDelta() / deltaOffset) * boxCount},
+									screenWidth: 	{ value: window.innerWidth },
+									u_frequency: 	{ value: particlesController.frequency },
+									u_speed: 		{ value: particlesController.speed },
 									u_displacement: { value: particlesController.displacement},
-									u_scale: { value: particlesController.scale },
+									u_scale: 		{ value: particlesController.scale },
 									u_particleSize: { value: particlesController.size },
-									u_bounce: { value: particlesController.bounce }
+									u_bounce: 		{ value: particlesController.bounce }
 								},
 								vertexShader: document.getElementById( 'vertexshader' ).textContent,
 								fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
@@ -315,7 +238,7 @@
 							particles.position.y = i * boxMargin
 							particles.position.x = h * boxMargin
 							particles.position.z = l * boxMargin
-							
+
 							boxes.push(particles)
 							boxGroup.add(particles)
 							boxCount++
@@ -323,8 +246,6 @@
 						}
 					}
 				}
-
-				console.log(boxCount)
 
 				boxGroup.rotation.x = effectController.x
 				boxGroup.rotation.y = effectController.y
@@ -425,12 +346,17 @@
 				// particles.rotation.x += 0.002;
 				// particles.rotation.y += 0.005;
 
+				noise.seed(Math.random())
+
+
 				var geometry = particles.geometry;
 				var attributes = geometry.attributes;
 
 				delta = clock.getElapsedTime()
+				
 				materials.forEach((e, i) => {
 					e.uniforms.u_time.value = ((delta / deltaOffset) + (delta * (i % 40))) / 20
+					// e.uniforms.noise.value = noise.perlin3(boxes[i].position.x, boxes[i].position.y, delta);
 				})
 
 				raycaster.setFromCamera( mouse, camera );
