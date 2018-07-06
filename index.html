@@ -70,6 +70,11 @@
 				return p;
 			}
 
+			vec3 wiggle(vec3 pos, float time) {
+				pos.x = pos.x + sin(pos.x + time);
+				pos.y = pos.y + sin((( pos.y + (time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
+				return pos;
+			}
 
 			void main() {
 
@@ -79,9 +84,8 @@
 				vTime = time;
 
 				vec3 pos = position;
-				pos.x = pos.x + sin(pos.x + time);
-				pos.y = pos.y + sin((( pos.y + (time / float(4)) ) * float(u_speed)) * float(u_frequency) * PI );
 
+				pos = wiggle(pos, time);
 				pos = bounce(pos, time);
 
 				vec4 posFinal = vec4(pos * vec3(u_displacement) * noise, 1.0);
