@@ -207,7 +207,7 @@
 				frequency: 1.22,
 				speed: 3.21,
 				displacement: 0.7,
-				scale: 10,
+				scale: 20,
 				size: 0.37
 			}
 
@@ -227,7 +227,7 @@
 				scene.background = new THREE.Color( 0xd1d1d1 );
 
 				// points
-				var geometry1 = new THREE.BoxGeometry( 100, 100, 100, 128, 128, 128 );// new THREE.SphereGeometry(80, 256, 256) //new THREE.PlaneGeometry(200, 200, 128, 128) //  //
+				var geometry1 = new THREE.SphereGeometry(80, 512, 512) // new THREE.BoxGeometry( 100, 100, 100, 128, 128, 128 );// new THREE.SphereGeometry(80, 256, 256) //new THREE.PlaneGeometry(200, 200, 128, 128) //  //
 				var vertices = geometry1.vertices;
 
 				var positions = new Float32Array( vertices.length * 3 );
@@ -244,15 +244,11 @@
 				clock.start()
 
 				for ( var i = 0, l = vertices.length; i < l; i ++ ) {
-
 					vertex = vertices[ i ];
 					vertex.toArray( positions, i * 3 );
-
-					color.setHSL( 0.01 + 0.1 * ( i / l ), 0.2, 0.5 );
+					color.setHSL( 0.01 + 0.1 * ( i / l ), 0.9, 0.1 );
 					color.toArray( colors, i * 3 );
-
 					sizes[ i ] = PARTICLE_SIZE * 0.5;
-
 				}
 
 				var geometry = new THREE.BufferGeometry();
@@ -346,7 +342,7 @@
 				particlesFolder.add( particlesController, "frequency", 0, 15, 0.0005).onChange( particlesValuesChanger );
 				particlesFolder.add( particlesController, "speed", 0, 15, 0.0005).onChange( particlesValuesChanger );
 				particlesFolder.add( particlesController, "displacement", 0, 6, 0.0005).onChange( particlesValuesChanger );
-				particlesFolder.add( particlesController, "scale", 0, 10, 0.0005).onChange( particlesValuesChanger );
+				particlesFolder.add( particlesController, "scale", 0, 20, 0.0005).onChange( particlesValuesChanger );
 				particlesFolder.add( particlesController, "size", 0, 10, 0.001).onChange( particlesValuesChanger );
 
 			}
